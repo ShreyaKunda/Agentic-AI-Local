@@ -1,0 +1,58 @@
+@startuml
+title **Unrestricted Architecture (Cloud + SaaS)**
+
+skinparam rectangleStyle round
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+actor "External User\n(Customer / Researcher)" as CloudUser
+actor "Threat Intel Sources\n(YouTube, Reddit, OSINT, API Feeds)" as OSINT
+
+cloud "GCP / Cloud Infrastructure" {
+
+    rectangle "Access + Management Layer" {
+        rectangle "API Gateway\n(OAuth2 / JWT / Rate Limit)" as APIGW
+        rectangle "Subscription / Billing Service"
+        rectangle "Tenant Isolation + IAM\n(SaaS RBAC)"
+    }
+
+    rectangle "Agent Execution Platform" {
+        rectangle "LLM Orchestrator\n(Vertex AI, LangChain, Agent Framework)" as Orchestrator
+        rectangle "Microservices (Agents)" {
+            rectangle "OSINT Intelligence Agent"
+            rectangle "Risk Scoring Agent"
+            rectangle "Path Analysis Agent"
+            rectangle "Mitigation Recommendation Agent"
+        }
+    }
+
+    rectangle "Data + Knowledge Layer" {
+        database "Multi-Tenant Neo4j\nCyber Knowledge Graph" as CloudNeo
+        folder "Vector DB (Pinecone / Weaviate)" as CloudVector
+        folder "Object Storage\n(Reports, Raw OSINT, Exports)" as CloudStore
+    }
+
+    rectangle "Analytics + Optional AI" {
+        rectangle "Dashboards\n(Grafana, Looker)" as Dashboard
+        rectangle "ML Threat Predictive Engine" as ML
+    }
+}
+
+CloudUser --> APIGW : Login + Query
+APIGW --> Orchestrator : Trigger Agent Workflow
+Orchestrator --> CloudNeo : Graph Query / Update
+Orchestrator --> CloudVector : Embedding Search
+Orchestrator --> CloudStore : Save Intelligence Outputs
+Orchestrator <-- OSINT : Internet Data Collection
+APIGW --> CloudUser : Results (Report / Graph Path)
+
+legend top center
+| Deployment Mode | Behavior |
+|----------------|----------|
+| 🌐 Cloud SaaS | Scalable, Multi-Tenant |
+| 🤖 Agent Automations | Uses AI Orchestrators + OSINT |
+| 🔗 External Integrations | Allowed |
+endlegend
+
+@enduml
