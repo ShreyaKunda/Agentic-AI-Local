@@ -1,0 +1,55 @@
+@startuml
+title **Restricted / Export-Controlled Architecture (On-Prem Deployment)**
+
+skinparam rectangleStyle round
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+actor "Security Analyst" as User
+actor "Internal Systems\n(SIEM / Vulnerability Scanner / Logs)" as InternalSource
+
+rectangle "On-Prem Secure Zone" {
+    
+    rectangle "Access Layer" {
+        rectangle "RBAC Gateway\n(SAML / PKI / MFA)" as IAM
+        rectangle "API Layer\n(REST / GraphQL)" as API
+    }
+    
+    rectangle "Core Services" {
+        rectangle "Agent Service Layer" as Agent {
+            rectangle "Risk Assessment Agent"
+            rectangle "OSINT Agent\n(Local Only - No Internet)"
+            rectangle "Attack Path Reasoning Agent"
+        }
+        
+        rectangle "Knowledge Graph + Storage" {
+            database "Neo4j CKG" as Neo4j
+            folder "Document Store\n(Internal Reports)" as Docs
+            folder "Vector DB (Optional)\n(Local Embeddings)" as Vector
+        }
+    }
+
+    rectangle "Audit / Compliance" {
+        rectangle "Logging + SIEM Forwarder"
+        rectangle "Tamper-Proof Audit Trail"
+    }
+}
+
+User --> IAM : Authenticate
+InternalSource --> API : Data Feed\n(SCAP, STIG, STIX, Logs)
+User --> API : Query / Analysis Request
+API --> Agent : Execute Task
+Agent --> Neo4j : Query / Enrich Graph
+Agent --> Docs : Store new insights
+Agent --> Vector : Similarity / Memory Lookup
+API --> User : Response (Report / Path Analysis)
+
+legend top center
+| Symbol | Meaning |
+|--------|---------|
+| 🔒 Restricted | No external connectivity |
+| 🏛 On-Prem Only | Meets export/privacy compliance |
+endlegend
+
+@enduml
